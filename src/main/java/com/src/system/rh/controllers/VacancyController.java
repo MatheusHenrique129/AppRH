@@ -50,7 +50,7 @@ public class VacancyController {
     public ModelAndView vacancyDetails(@PathVariable("id") long id) {
         VacancyModel vacancy = vacancyRepository.findById(id);
         ModelAndView modelAndView = new ModelAndView("vacancy/vacancyDetails");
-        modelAndView.addObject("vaga", vacancy);
+        modelAndView.addObject("vacancy", vacancy);
         Iterable<CandidateModel> candidate = candidateRepository.findByVacancy(vacancy);
         return modelAndView;
     }
@@ -74,5 +74,40 @@ public class VacancyController {
             attributes.addFlashAttribute("messagem", "RG duplicado");
             return "redirect:/{id}";
         }
+
+        VacancyModel vacancy = vacancyRepository.findById(id);
+        candidate.setVacancy(vacancy);
+        candidateRepository.save(candidate);
+        attributes.addFlashAttribute("messagem", "Candidato adicionado com sucesso!");
+        return "redirect:/{id}";
+    }
+
+    @RequestMapping("/deletarCandidato")
+    public String CandidateDelete(String rg) {
+        CandidateModel candidate = candidateRepository.findByRg(rg);
+        VacancyModel vacancy = candidate.getVacancy();
+        String id = "" + vacancy.getId();
+
+        candidateRepository.delete(candidate);
+
+        return "redirect:/" + id;
+    }
+
+    @RequestMapping(value = "/editar-vaga", method = RequestMethod.GET)
+    public ModelAndView editVacancy(long id) {
+        VacancyModel vacancy = vacancyRepository.findById(id);
+        ModelAndView modelAndView = new ModelAndView("vacancy/update-vacancy");
+        modelAndView.addObject("vacancy", vacancy);
+        return modelAndView;
+    }
+
+    @RequestMapping(value = "/editar-vaga", method = RequestMethod.POST)
+    public String updateVacancy(@Valid VacancyModel vacancy, BindingResult result, RedirectAttributes attributes) {
+        vacancyRepository.save(vacancy);
+        attributes.addFlashAttribute("success", "Vaga alterada com sucesso!");
+
+        long idLong = vacancy.getId();
+        String id = "" + idLong;
+        return "redirect:/" + id;
     }
 }
